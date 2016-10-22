@@ -17,7 +17,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,8 +76,6 @@ public class MainActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             }
-
-
 
 
             /*
@@ -164,12 +161,7 @@ public class MainActivity extends AppCompatActivity {
          */
         protected List<String> doInBackground(Void... params) {
 
-            /*
-            We are going to be using the
-            FileInputStream, a List, and
-            accessing the mainListView
-             */
-            FileInputStream inputStream;
+
             mainListView = (ListView) findViewById(R.id.mainListView);
             List<String> list = new ArrayList<>();
 
@@ -184,15 +176,12 @@ public class MainActivity extends AppCompatActivity {
              */
             try {
                 String message;
-                inputStream = openFileInput("numbers.txt");
+                FileInputStream inputStream = openFileInput("numbers.txt");
                 InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
                 BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                StringBuffer stringBuffer = new StringBuffer();
                 int i = 0;
                 while ((message = bufferedReader.readLine()) != null) {
-                    stringBuffer.append(message);
-                    String temp = stringBuffer.toString();
-                    list.add(i, temp);
+                    list.add(i, message);
                     Thread.sleep(250);
                     i++;
                     publishProgress(i * 10);
@@ -200,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
 
             } catch (Exception e) {
                 e.printStackTrace();
+                Toast.makeText(getApplicationContext(), "No File", Toast.LENGTH_LONG).show();
             }
             return list;
         }
@@ -242,6 +232,7 @@ public class MainActivity extends AppCompatActivity {
     public void clearFile(View view) {
         listAdapter.clear();
         listAdapter.notifyDataSetChanged();
+        deleteFile("numbers.txt");
         Toast.makeText(getApplicationContext(), "Load Cleared", Toast.LENGTH_LONG).show();
     }
 }
