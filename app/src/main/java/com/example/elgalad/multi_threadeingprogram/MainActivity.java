@@ -14,7 +14,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,7 +26,6 @@ public class MainActivity extends AppCompatActivity {
     public ListView mainListView;
     public ArrayAdapter<String> listAdapter;
     public ProgressBar progressBar;
-    public File file;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,9 +69,16 @@ public class MainActivity extends AppCompatActivity {
             numbers.txt for us to write data to
              */
             String filename = "numbers.txt";
-            file = new File(getBaseContext().getFilesDir(), filename);
-            FileOutputStream outputStream;
-            String string;
+            File file = new File(getApplicationContext().getFilesDir(), filename);
+            if (!file.exists()) {
+                try {
+                    file.createNewFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+
 
 
             /*
@@ -78,15 +87,18 @@ public class MainActivity extends AppCompatActivity {
             them to the file.
              */
             try {
-                outputStream = new FileOutputStream(filename);
+                FileOutputStream fOut = openFileOutput(filename, Context.MODE_PRIVATE);
+                OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fOut);
+
                 for (int i = 1; i <= 10; i++) {
-                    string = i + "\n";
-                    outputStream.write(string.getBytes());
+                    String string = Integer.toString(i) + "\n";
+                    outputStreamWriter.write(string);
                     Thread.sleep(250);
+                    publishProgress(i * 10);
                 }
 
                 // Close up when done
-                outputStream.close();
+                outputStreamWriter.close();
 
             } catch (Exception e) {
                 e.printStackTrace();
