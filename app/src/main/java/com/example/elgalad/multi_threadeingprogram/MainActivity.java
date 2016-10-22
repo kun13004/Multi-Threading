@@ -1,80 +1,126 @@
 package com.example.elgalad.multi_threadeingprogram;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private ListView mainListView;
-    private ArrayAdapter<String> listAdapter;
+    public ListView mainListView;
+    public ArrayAdapter<String> listAdapter;
+    public ProgressBar progressBar;
+    public File file;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        progressBar = (ProgressBar) findViewById(R.id.progressBar2);
     }
+
+
+
 
     public void createFile(View view) {
-
-        String filename = "numbers.txt";
-        File file = new File(this.getFilesDir(), filename);
-        OutputStreamWriter outputStream;
-        String string = "";
-
-        try {
-            outputStream = new OutputStreamWriter(this.openFileOutput(filename, Context.MODE_PRIVATE));
-            for (int i = 1; i <= 10; i++) {
-                string = Integer.toString(i);
-                outputStream.write(string + "\n");
-                Thread.sleep(250);
-            }
-            outputStream.close();
-            Toast.makeText(getApplicationContext(), "File Created", Toast.LENGTH_LONG).show();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
+        new createFileTask().execute();
     }
 
-    public void loadFile(View view) {
+    private class createFileTask extends AsyncTask<Void, Integer, Void> {
 
+        @Override
+        protected Void doInBackground(Void... params) {
+            String filename = "numbers.txt";
+            file = new File(getBaseContext().getFilesDir(), filename);
+            FileOutputStream outputStream;
+            String string;
 
-        FileInputStream inputStream;
-        mainListView = (ListView) findViewById(R.id.mainListView);
+            try {
+                outputStream = new FileOutputStream(filename);
+                for (int i = 1; i <= 10; i++) {
+                    string = i + "\n";
+                    outputStream.write(string.getBytes());
+                    Thread.sleep(250);
+                }
+                outputStream.close();
 
-        try {
-            String message;
-            List<String> list = new ArrayList<>();
-            inputStream = openFileInput("numbers.txt");
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-            StringBuffer stringBuffer = new StringBuffer();
-            int i = 0;
-            while ((message = bufferedReader.readLine()) != null) {
-                stringBuffer.append(message);
-                String temp = stringBuffer.toString();
-                list.add(i, temp);
-                Thread.sleep(250);
-                i++;
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            listAdapter = new ArrayAdapter<String>(this, R.layout.simplerow, list);
+            return null;
+        }
 
+        protected void onProgressUpdate(Integer... progress) {
+            progressBar.setProgress(progress[0]);
+        }
+
+        protected void onPostExecute(Void params) {
+            Toast.makeText(getApplicationContext(), "File Created", Toast.LENGTH_LONG).show();
+        }
+    }
+
+
+
+
+
+
+    public void loadFile(View view) {
+        new loadFileTask().execute();
+    }
+
+    private class loadFileTask extends AsyncTask<Void, Integer, List<String>> {
+
+
+
+        @Override
+        protected List<String> doInBackground(Void... params) {
+            FileInputStream inputStream;
+            mainListView = (ListView) findViewById(R.id.mainListView);
+            List<String> list = new ArrayList<>();
+
+            try {
+                String message;
+                inputStream = openFileInput("numbers.txt");
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                StringBuffer stringBuffer = new StringBuffer();
+                int i = 0;
+                while ((message = bufferedReader.readLine()) != null) {
+                    stringBuffer.append(message);
+                    String temp = stringBuffer.toString();
+                    list.add(i, temp);
+                    Thread.sleep(250);
+                    i++;
+                    publishProgress(i * 10);
+                }
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return list;
+        }
+
+        protected void onProgressUpdate(Integer... progress) {
+            progressBar.setProgress(progress[0]);
+        }
+
+        protected void onPostExecute(List<String> list) {
+            listAdapter = new ArrayAdapter<String>(getBaseContext(), R.layout.simplerow, list);
             mainListView.setAdapter(listAdapter);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
